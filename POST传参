@@ -1,0 +1,5 @@
+1.利用python脚本：
+运行python程序，输入如下命令：
+import requests
+r = requests.post(‘http://123.206.87.240:8002/post/’,data={‘what’:‘flag’})
+print(r.text)
