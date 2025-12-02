@@ -5,3 +5,20 @@ r = requests.post(‘http://123.206.87.240:8002/post/’,data={‘what’:‘fla
 print(r.text)
 2.直接在网址后输入(GET方式)：
 http://........./?参数=某个值
+3.burp suitePOST传参：
+修改请求为POST；
+修改请求方法：在Repeater中，将请求方法从GET改为POST。
+*添加Content-Type：在请求头中添加Content-Type: application/x-www-form-urlencoded，这是POST请求所需的媒体类型信息。
+添加POST参数：在请求体中添加需要提交的参数。例如，如果需要提交参数b=2，则在请求体中添加b=2。
+以下是一个示例请求（同时以GET方式提交一个名为a,值为1的变量，以POST方式随便提交一个名为b,值为2的变量）：
+POST /?a=1 HTTP/1.1
+Host: 61.147.171.105:50542
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+Accept-Encoding: gzip, deflate
+Accept-Language: zh-CN,zh;q=0.9
+Connection: close
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 7
+b=2
